@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-    provider = "mysql"
+    provider = "postgresql"
     url      = env("DATABASE_URL")
 }
 
@@ -67,6 +67,7 @@ model IdleItem {
     lastUpdate     Float?
 }
 
+
 model Reminder {
     id        String @id @unique
     userID    String
@@ -83,4 +84,26 @@ model VoidReminder {
 
 model RestartChannel {
     id String @id @unique
+}
+
+model ChannelOwner {
+  channelId String @id
+  userId    String
+}
+
+model IdleStonk {
+  name           String  @id @unique
+  period         String?
+  returnPercent  Float?
+  riskLevel      Float?
+  percentHistory Json?
+  lastUpdate     Float?
+}
+
+model UserMemory {
+  id        Int     @id @default(autoincrement())
+  userId    String  @unique
+  username  String
+  memory    String  // teks custom yang bisa di-insert Oidupus
+  updatedAt DateTime @updatedAt
 }

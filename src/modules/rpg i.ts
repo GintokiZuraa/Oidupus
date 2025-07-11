@@ -8,10 +8,16 @@ client.on('messageCreate', async message => {
     if (message.author.id !== EPICRPG_ID) return;
     if (!message.embeds[0]?.author?.name?.endsWith(' — inventory')) return;
 
-    const id = message.embeds[0]?.author?.iconURL?.match(/(?<=avatars\/)\d+/)?.[0] !== '0' ? message.embeds[0]?.author?.iconURL?.match(/(?<=avatars\/)\d+/)?.[0] : message.guild?.members?.find(member => member.user.username === message.embeds[0]?.author?.name.split(' — ')[0])?.id;
+    const id = message.embeds[0]?.author?.iconURL?.match(/(?<=avatars\/)\d+/)?.[0] !== '0'
+        ? message.embeds[0]?.author?.iconURL?.match(/(?<=avatars\/)\d+/)?.[0]
+        : message.guild?.members?.find(member => member.user.username === message.embeds[0]?.author?.name.split(' — ')[0])?.id;
     if (!id) return;
 
-    const recentUserMessage = await message.channel?.getMessages({ before: message.id, limit: 1, filter: m => (m.author.id === id || m.content.includes(id)) && !!m.content.match(/^rpg i/i) });
+    const recentUserMessage = await message.channel?.getMessages({
+        before: message.id,
+        limit: 1,
+        filter: m => (m.author.id === id || m.content.includes(id)) && !!m.content.match(/^rpg i/i)
+    });
     const isPredictTimePotion = recentUserMessage?.[0]?.content.match(/^rpg i.+t$/i);
 
     const user = await prisma.user.findUnique({
@@ -29,6 +35,7 @@ client.on('messageCreate', async message => {
     const itemField = message.embeds[0].fields?.[0]?.value;
     if (!itemField) return;
 
+    // Extract basic items
     const normieFish = Number(itemField.match(/(?<=\*\*normie fish\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
     const goldenFish = Number(itemField.match(/(?<=\*\*golden fish\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
     const epicFish = Number(itemField.match(/(?<=\*\*EPIC fish\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
@@ -41,6 +48,15 @@ client.on('messageCreate', async message => {
     const apple = Number(itemField.match(/(?<=\*\*apple\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
     const banana = Number(itemField.match(/(?<=\*\*banana\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
     const ruby = Number(itemField.match(/(?<=\*\*ruby\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
+
+    // Extract monster drops
+    const wolfSkin = Number(itemField.match(/(?<=\*\*wolf skin\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
+    const zombieEye = Number(itemField.match(/(?<=\*\*zombie eye\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
+    const unicornHorn = Number(itemField.match(/(?<=\*\*unicorn horn\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
+    const mermaidHair = Number(itemField.match(/(?<=\*\*mermaid hair\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
+    const chip = Number(itemField.match(/(?<=\*\*chip\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
+    const darkEnergy = Number(itemField.match(/(?<=\*\*dark energy\*\*: )[\d,]+/)?.[0]?.replace(/,/g, '')) || 0;
+
     if (!normieFish && !goldenFish && !epicFish && !woodenLog && !epicLog && !superLog && !megaLog && !hyperLog && !ultraLog && !apple && !banana && !ruby) return;
 
     const inventory = new InventoryCalc({ normieFish, goldenFish, epicFish, woodenLog, epicLog, superLog, megaLog, hyperLog, ultraLog, apple, banana, ruby, crafterLevel });
@@ -66,7 +82,38 @@ client.on('messageCreate', async message => {
             const plus = timePotionProfit > 0 ? '+' : '';
             content += `\n${EMOJI.potion_time} **${numberFormat(timePotionLog)}** ${EMOJI.log}`;
             content += ` ${EMOJI.blank} **${plus}${numberFormat(timePotionProfit)}** ${EMOJI.log} (${plus}${percentFormat(timePotionProfit / a10Log)})`;
-            content += inventory.logShouldSell > 0 ? ` ⚠️\n${EMOJI.blank} Could sell approximately **${numberFormat(inventory.logShouldSell)}** ${EMOJI.log} at a10+ to avoid a8 banana cap next tt` : '';
+            content += inventory.logShouldSell > 0
+                ? ` ⚠️\n${EMOJI.blank} Could sell approximately **${numberFormat(inventory.logShouldSell)}** ${EMOJI.log} at a10+ to avoid a8 banana cap next tt`
+                : '';
+
+            // Calculate dragon scales from monster drops (simplified output)
+if (user.profession.merchant >= 100) {
+    const merchantLevel = user.profession.merchant;
+    const scaleBonusPer100 = Math.floor((merchantLevel - 100) * 3);
+    let totalScales = 0;
+
+    // Calculate for each monster drop type
+    for (const count of [wolfSkin, zombieEye, unicornHorn, mermaidHair, chip, darkEnergy]) {
+        if (count === 0) continue;
+        
+        const fullBatches = Math.floor(count / 100);
+        const partialDrops = count % 100;
+        
+        // Guaranteed scales from full batches
+        totalScales += fullBatches * scaleBonusPer100;
+        
+        // Probable scales from partial batch
+        if (partialDrops > 0) {
+            const chancePerDrop = scaleBonusPer100 / 100;
+            totalScales += Math.floor(partialDrops * chancePerDrop);
+        }
+    }
+
+    if (totalScales > 0) {
+        content += `\n${EMOJI.blank} Selling all monster drops would give **+${numberFormat(totalScales)}** ${EMOJI.dragon_scale} (merchant ${merchantLevel})`;
+    }
+}
+
             a10Log = timePotionLog;
         } else {
             for (let i = 0; i < 30; i++) {
@@ -97,5 +144,3 @@ function getMaxArea(maxArea: string) {
     if (maxAreaNumber <= 15) return '15';
     return 'TOP';
 }
-
-

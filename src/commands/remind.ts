@@ -12,41 +12,46 @@ defineCommand({
     name: 'remind',
     aliases: ['rm'],
     description: 'Remind you of something',
-    usages: ['<time> [message]', 'delete <index>'],
+    usages: ['<time> [message]', 'delete <index>', 'list'],
     async run(message, args) {
-        if (!args.length) {
+        const sub = args[0]?.toLowerCase();
+
+        // Show reminder list: `rm` or `rm list`
+        if (!args.length || sub === 'list') {
             const reminders = await prisma.reminder.findMany({
                 where: { userID: message.author.id },
                 orderBy: { id: 'asc' }
             });
-            if (!reminders.length) return;
+
+            if (!reminders.length) return reply(message, "You don't have any reminders.");
 
             return reply(message, reminderList(reminders));
         }
 
-        const [delArg, indexArg] = args;
-        if (['delete', 'del', 'remove', 'rm'].includes(delArg.toLowerCase())) {
-            const index = Number(indexArg);
-            if (isNaN(index)) return;
+        // Delete reminder: `rm delete <index>`
+        if (['delete', 'del', 'remove', 'rm'].includes(sub)) {
+            const index = Number(args[1]);
+            if (isNaN(index)) return reply(message, 'Invalid reminder index.');
 
             const reminder = await prisma.reminder.findFirst({
                 where: { userID: message.author.id },
                 orderBy: { id: 'asc' },
                 skip: index - 1
             });
+
             if (!reminder) return message.createReaction('❌');
 
             await prisma.reminder.delete({ where: { id: reminder.id } });
-
             return message.createReaction('✅');
         }
 
+        // Create a reminder: `rm <time> [message]`
         const [timeArg, ...messageArgs] = args;
-        if (!regex.test(timeArg)) return;
+        if (!regex.test(timeArg)) return reply(message, 'Invalid time format.');
 
         const time = parseTime(timeArg);
         const remindMessage = sanitize(messageArgs.join(' '));
-        if (time > 31536000000) return message.createReaction('💀');
+        if (time > 31536000000) return message.createReaction('💀'); // >1 year
 
         const reminder = await prisma.reminder.create({
             data: {
@@ -59,7 +64,6 @@ defineCommand({
         });
 
         if (time < CHECK_INTERVAL) scheduleReminder(reminder);
-
         await message.createReaction('✅');
     }
 });

@@ -1,15 +1,16 @@
-export const PREFIX = 'O';
+export const PREFIX = ';';
 export const EPICRPG_ID = '555955826880413696';
 export const IDLEFARM_ID = '1085406806492319784';
 export const CHECK_INTERVAL = 60000;
 
 export const EMOJI: Record<string, string> = {
-    'blank': '<:blank:1242292384679596113>',
-    'fish': '<:fish:1203287470750441502>',
-    'log': '<:log:1203287481789976746>',
-    'apple': '<:apple:1216213406852317184>',
-    'ruby': '<:ruby:1203287520020930600>',
-    'potion_time': '<:potion_time:1203282298674487306>'
+    'blank': '<:blank:1375740396461887539>',
+    'fish': '<:fish:1375740399171145781>',
+    'log': '<:log:1375740401599905834>',
+    'apple': '<:apple:1375740404259098688>',
+    'ruby': '<:ruby:1375740407001911296>',
+    'potion_time': '<:potion_time:1375740410067943484>',
+    'dragon_scale':'<:dragon_scale:1374876122616955040>'
 };
 
 export const ENCHANT_MULTIPLIER: Record<string, number> = {

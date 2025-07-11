@@ -27,6 +27,7 @@ async function idleMa(message: Message) {
                 : field.name.includes(':container:') ? 'refined'
                     : field.name.includes(':ship:') ? 'product'
                         : field.name.includes(':spaceship:') ? 'assembly' : undefined;
+
             const pack = Number(field.value.match(/(?<=\*\*Price\*\*: )[\d,]+/)?.[0]?.replace(/,/g, ''));
 
             await prisma.idleItem.upsert({
@@ -44,18 +45,44 @@ async function idleMa(message: Message) {
             const percent = Number(field.value.match(/(?<=`)[+-]?\d+(?=%`)/)?.[0]);
 
             const today0UTC = new Date().setUTCHours(0, 0, 0, 0);
-            const outdated = await prisma.idleItem.findFirst({ where: { name, lastUpdate: { lt: today0UTC } } });
-            if (outdated && outdated.percent !== null) {
-                const { percentHistory } = outdated;
-                percentHistory.push(outdated.percent);
-                if (percentHistory.length > 99) percentHistory.shift();
 
-                await prisma.idleItem.upsert({
-                    where: { name },
-                    update: { type, price, percent, percentHistory, note, lastUpdate },
-                    create: { name, type, price, percent, percentHistory, note, lastUpdate }
-                });
-            } else {
+            const outdated = await prisma.idleItem.findFirst({ where: { name, lastUpdate: { lt: today0UTC } } });
+
+          if (outdated && outdated.percent !== null) {
+    let percentHistory: number[] = [];
+
+    if (Array.isArray(outdated.percentHistory)) {
+        // Ensure only numbers are included
+        percentHistory = (outdated.percentHistory as any[])
+            .filter((x): x is number => typeof x === 'number');
+    }
+
+    percentHistory.push(outdated.percent);
+    if (percentHistory.length > 99) percentHistory.shift();
+
+    await prisma.idleItem.upsert({
+        where: { name },
+        update: {
+            type,
+            price,
+            percent,
+            percentHistory, 
+            note,
+            lastUpdate
+        },
+        create: {
+            name,
+            type,
+            price,
+            percent,
+            percentHistory,
+            note,
+            lastUpdate
+        }
+    });
+}
+
+ else {
                 await prisma.idleItem.upsert({
                     where: { name },
                     update: { type, price, percent, note, lastUpdate },
