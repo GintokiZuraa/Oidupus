@@ -32,7 +32,7 @@ defineCommand({
 		const url = 'https://translate-pa.googleapis.com/v1/translate?' + new URLSearchParams({
 			'params.client': 'gtx',
 			'dataTypes': 'TRANSLATION',
-			'key': 'AIzaSyDLEeFI5OtFBwYBIoK_jj5m32rZK5CkCXA',
+			'key': 'blank',
 			'query.sourceLanguage': sourceLang,
 			'query.targetLanguage': targetLang,
 			'query.text': text
