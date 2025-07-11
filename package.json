@@ -21,6 +21,7 @@
         "@google/generative-ai": "^0.24.1",
         "@prisma/client": "^5.22.0",
         "date-fns": "^4.1.0",
+        "express": "^5.1.0",
         "fuse.js": "^7.1.0",
         "googleapis": "^150.0.1",
         "mysql": "^2.18.1",
