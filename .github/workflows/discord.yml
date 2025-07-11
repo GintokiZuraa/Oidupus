@@ -3,7 +3,7 @@ name: Discord Push Notify
 on:
   push:
     branches:
-      - main  # or replace with the branch you use
+      - main
 
 jobs:
   notify:
@@ -11,8 +11,9 @@ jobs:
     steps:
       - name: Notify Discord
         uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          message: |
+          args: |
             🚀 Code pushed to `${{ github.repository }}` by `${{ github.actor }}`
             👉 Commit: `${{ github.event.head_commit.message }}`
