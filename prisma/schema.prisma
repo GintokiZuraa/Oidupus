@@ -107,3 +107,8 @@ model UserMemory {
   memory    String  // teks custom yang bisa di-insert Oidupus
   updatedAt DateTime @updatedAt
 }
+
+model AnnouncementChannel {
+  guildId   String  @id
+  channelId String
+}
